@@ -26,7 +26,11 @@ export const Webcam = () => {
             disabled={isStreaming}
           >
             {devices.map((device) => (
-              <option key={device.deviceId} value={device.deviceId}>
+              <option
+                key={device.deviceId}
+                value={device.deviceId}
+                className="text-slate-900"
+              >
                 {device.label || `Камера ${devices.indexOf(device) + 1}`}
               </option>
             ))}
@@ -55,7 +59,7 @@ export const Webcam = () => {
             ref={videoRef}
             autoPlay
             playsInline
-            className="w-full h-full object-cover"
+            className="w-full h-full object-cover transform scale-x-[-1]"
             aria-label="Трансляция с веб-камеры"
           >
             <track kind="captions" />
