@@ -1,6 +1,6 @@
 "use client";
 
-import { Webcam } from "@components/Webcam";
+import { Webcam } from "@/components/Webcam";
 
 export default function Home() {
   return (
