@@ -1,5 +1,3 @@
-import { MediaDeviceInfo } from "@/types/webcam";
-
 export class WebcamService {
   static async getDevices(): Promise<MediaDeviceInfo[]> {
     const devices = await navigator.mediaDevices.enumerateDevices();
