@@ -1,58 +1,67 @@
-import { useRef, useState } from "react";
-import { useWebcamDevices } from "@hooks/useWebcamDevices";
-import { WebcamService } from "@services/webcamService";
-import { WebcamControls, WebcamState } from "@/types/webcam";
+import { useRef, useState, useEffect } from "react";
 
-export const useWebcam = (): WebcamControls & WebcamState => {
+interface MediaDeviceInfo {
+  deviceId: string;
+  label: string;
+}
+
+export const useWebcam = () => {
   const videoRef = useRef<HTMLVideoElement>(null);
+  const [devices, setDevices] = useState<MediaDeviceInfo[]>([]);
+  const [selectedDevice, setSelectedDevice] = useState<string>("");
   const [isStreaming, setIsStreaming] = useState(false);
-  const [streamError, setStreamError] = useState<string | null>(null);
-  const {
-    devices,
-    selectedDevice,
-    setSelectedDevice,
-    error: devicesError,
-  } = useWebcamDevices();
+  const [streamError, setStreamError] = useState<string>("");
+
+  useEffect(() => {
+    getDevices();
+  }, []);
+
+  const getDevices = async () => {
+    try {
+      const devices = await navigator.mediaDevices.enumerateDevices();
+      const videoDevices = devices
+        .filter((device) => device.kind === "videoinput")
+        .map((device) => ({
+          deviceId: device.deviceId,
+          label: device.label,
+        }));
+      setDevices(videoDevices);
+      if (videoDevices.length > 0) {
+        setSelectedDevice(videoDevices[0].deviceId);
+      }
+    } catch (error) {
+      setStreamError("Ошибка при получении списка устройств");
+    }
+  };
 
   const startStream = async () => {
     try {
-      setStreamError(null);
-
-      if (!selectedDevice) {
-        setStreamError("Не выбрана камера");
-        return;
-      }
-
-      const stream = await WebcamService.getStream(selectedDevice);
-
+      const stream = await navigator.mediaDevices.getUserMedia({
+        video: {
+          deviceId: selectedDevice ? { exact: selectedDevice } : undefined,
+        },
+      });
       if (videoRef.current) {
         videoRef.current.srcObject = stream;
-        videoRef.current.onloadedmetadata = () => {
-          if (videoRef.current) {
-            videoRef.current
-              .play()
-              .then(() => setIsStreaming(true))
-              .catch(() => setStreamError("Ошибка при запуске видео"));
-          }
-        };
+        setIsStreaming(true);
+        setStreamError("");
       }
-    } catch (err) {
-      setStreamError(
-        "Ошибка при запуске трансляции. Убедитесь, что камера подключена и доступна."
-      );
+    } catch (error) {
+      setStreamError("Ошибка при запуске камеры");
+      setIsStreaming(false);
     }
   };
 
   const stopStream = () => {
-    if (videoRef.current && videoRef.current.srcObject) {
+    if (videoRef.current?.srcObject) {
       const stream = videoRef.current.srcObject as MediaStream;
-      WebcamService.stopStream(stream);
+      stream.getTracks().forEach((track) => track.stop());
       videoRef.current.srcObject = null;
       setIsStreaming(false);
     }
   };
 
-  const toggleStream = async () => {
+  const toggleStream = () => {
     if (isStreaming) {
       stopStream();
     } else {
@@ -62,23 +71,18 @@ export const useWebcam = (): WebcamControls & WebcamState => {
 
   const handleDeviceChange = (deviceId: string) => {
     setSelectedDevice(deviceId);
-
     if (isStreaming) {
       stopStream();
-      setTimeout(() => {
-        startStream();
-      }, 300);
+      startStream();
     }
   };
 
   return {
     videoRef,
     isStreaming,
-    streamError: streamError || devicesError,
+    streamError,
     devices,
     selectedDevice,
-    startStream,
-    stopStream,
     toggleStream,
     handleDeviceChange,
   };

@@ -1,4 +1,4 @@
-import { useWebcam } from "@hooks/useWebcam";
+import { useWebcam } from "@/hooks/useWebcam";
 
 export const Webcam = () => {
   const {
