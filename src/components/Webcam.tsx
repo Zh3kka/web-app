@@ -1,4 +1,5 @@
 import { useWebcam } from "@hooks/useWebcam";
+import { LegacyRef } from "react";
 
 export const Webcam = () => {
   const {
@@ -56,7 +57,7 @@ export const Webcam = () => {
 
         <div className="relative aspect-video bg-gray-100 rounded-lg overflow-hidden">
           <video
-            ref={videoRef}
+            ref={videoRef as LegacyRef<HTMLVideoElement>}
             autoPlay
             playsInline
             className="w-full h-full object-cover transform scale-x-[-1]"
