@@ -1,16 +1,25 @@
-import { WebSocket, Server } from "ws";
+import { WebSocket, WebSocketServer } from "ws";
 import { WebSocketMessage } from "../types/websocket";
-import { ConnectedClient, WebSocketServer } from "./types";
+import { ConnectedClient, IWebSocketServer } from "./types";
 
-export class WebSocketServerImpl implements WebSocketServer {
+export class WebSocketServerImpl implements IWebSocketServer {
   public clients: Map<string, ConnectedClient> = new Map();
 
-  constructor(private wss: Server) {
+  constructor(private wss: WebSocketServer) {
     this.setupServer();
   }
 
   private setupServer() {
-    this.wss.on("connection", this.handleConnection.bind(this));
+    this.wss.on("connection", (ws, req) => {
+      // Проверяем заголовки CORS
+      const origin = req.headers.origin;
+      if (origin) {
+        ws.on("headers", (headers) => {
+          headers.push(`Access-Control-Allow-Origin: ${origin}`);
+        });
+      }
+      this.handleConnection(ws);
+    });
   }
 
   public handleConnection(ws: WebSocket) {

@@ -7,7 +7,7 @@ export interface ConnectedClient {
   deviceName?: string;
 }
 
-export interface WebSocketServer {
+export interface IWebSocketServer {
   clients: Map<string, ConnectedClient>;
   broadcast: (message: WebSocketMessage) => void;
   sendToClient: (deviceId: string, message: WebSocketMessage) => void;
